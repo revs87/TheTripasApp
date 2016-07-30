@@ -7,16 +7,23 @@ repositories {
 }
 
 android {
-
+    signingConfigs {
+        config {
+            keyAlias 'release'
+            keyPassword 'Tripas!!!'
+            storeFile file('C:/WorkFS/_myHub/key/release.keystore')
+            storePassword 'Tripas!!!'
+        }
+    }
     compileSdkVersion 23
     buildToolsVersion "23.0.3"
-
     defaultConfig {
         applicationId "com.tripasfactory.tripasapp"
         minSdkVersion 17
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
+        signingConfig signingConfigs.config
     }
     buildTypes {
         release {
@@ -24,7 +31,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-
     packagingOptions {
         exclude 'META-INF/NOTICE' // will not include NOTICE file
         exclude 'META-INF/NOTICE.txt' // will not include NOTICE file
@@ -33,12 +39,14 @@ android {
         exclude 'META-INF/LICENSE.txt' // will not include LICENSE file
         exclude 'META-INF/license.txt' // will not include LICENSE file
     }
+    productFlavors {
+    }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.2.1'
-
     compile 'com.github.revs87:TheTripasLibrary:1.0.0-beta.007'
+    compile 'com.google.android.gms:play-services-maps:9.2.1'
 }
