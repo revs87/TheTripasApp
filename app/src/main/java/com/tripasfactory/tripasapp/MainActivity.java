@@ -44,11 +44,6 @@ public class MainActivity extends FragmentActivity {
         mMap.setTrafficEnabled(false);
         mMap.setIndoorEnabled(true);
         mMap.setBuildingsEnabled(false);
-        mMap.getUiSettings().setMapToolbarEnabled(true);
-        mMap.getUiSettings().setTiltGesturesEnabled(true);
-        mMap.getUiSettings().setZoomControlsEnabled(true);
-        mMap.getUiSettings().setCompassEnabled(true);
-        mMap.getUiSettings().setMyLocationButtonEnabled(true);
 
         if (getMyLocationSharedPreference() ||
                 (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
@@ -79,6 +74,11 @@ public class MainActivity extends FragmentActivity {
 
     private void setMyLocationButton() {
         mMap.setMyLocationEnabled(true);
+        mMap.getUiSettings().setTiltGesturesEnabled(true);
+        mMap.getUiSettings().setZoomControlsEnabled(true);
+        mMap.getUiSettings().setAllGesturesEnabled(true);
+        mMap.getUiSettings().setCompassEnabled(true);
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.setOnMyLocationButtonClickListener(new GoogleMap.OnMyLocationButtonClickListener() {
             @Override
             public boolean onMyLocationButtonClick() {
