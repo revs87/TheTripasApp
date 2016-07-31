@@ -13,7 +13,14 @@ public class MainActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        startActivity(new Intent(this, TTGoogleMapsFragmentActivity.class));
+        /**
+         * GMaps activity
+         * */
+        Intent intent = new Intent(this, TTGoogleMapsFragmentActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+        finish();
     }
 
 }

@@ -39,6 +39,8 @@ public class CCGoogleMapsFragmentActivity extends CCFusedLocationFragmentActivit
 
     private LatLng currentPositionMap;
     private Marker currentPositionMarker;
+    private LatLng avatarPositionMap;
+    private Marker avatarPositionMarker;
     private LatLng destinationPositionMap;
     private Marker destinationPositionMarker;
 
