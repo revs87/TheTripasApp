@@ -5,12 +5,15 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.tripasfactory.core.permissions.PermissionsChecker;
+import com.tripasfactory.core.permissions.PermissionsHandler;
 
 /**
  * Created by revs87 on 30/07/2016.
@@ -21,15 +24,31 @@ public class CCFusedLocationFragmentActivity extends FragmentActivity implements
     protected Location mLastLocation;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
-    protected double lat = 0.0;
-    protected double lon = 0.0;
+    protected double realLat = 0.0;
+    protected double realLon = 0.0;
+    protected PermissionsChecker permissionsChecker;
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (permissionsChecker != null) {
+            permissionsChecker.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        checkPermissions();
+
         buildGoogleApiClient();
+
+    }
+
+    private void checkPermissions() {
+        permissionsChecker = new PermissionsChecker(this, new PermissionsHandler() {
+        });
+        permissionsChecker.checkLocationPermissions();
     }
 
     /**
@@ -41,13 +60,19 @@ public class CCFusedLocationFragmentActivity extends FragmentActivity implements
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationRequest.setInterval(10000); // Update location every second
 
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        try {
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        } catch (SecurityException e) {
+            Log.e("SecurityException", e.getMessage());
+        } catch (Exception e) {
+            Log.e("Exception", e.getMessage());
+        }
 
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
                 mGoogleApiClient);
         if (mLastLocation != null) {
-            lat = mLastLocation.getLatitude();
-            lon = mLastLocation.getLongitude();
+            realLat = mLastLocation.getLatitude();
+            realLon = mLastLocation.getLongitude();
         }
 
         updateFusedCurrentPositionMap();
@@ -59,8 +84,8 @@ public class CCFusedLocationFragmentActivity extends FragmentActivity implements
 
     @Override
     public void onLocationChanged(Location location) {
-        lat = location.getLatitude();
-        lon = location.getLongitude();
+        realLat = location.getLatitude();
+        realLon = location.getLongitude();
 
         updateFusedCurrentPositionMap();
     }

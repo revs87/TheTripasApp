@@ -1,13 +1,10 @@
 package com.tripasfactory.clientcore.maps;
 
-import android.content.Context;
+import android.app.Activity;
 import android.os.Bundle;
 import android.os.Vibrator;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
+import android.support.annotation.NonNull;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -19,35 +16,43 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.tripasfactory.clientcore.R;
+import com.tripasfactory.clientcore.maps.animation.CCMarkersAnimator;
+import com.tripasfactory.clientcore.maps.animation.ICCMarkersAnimatorCallback;
 import com.tripasfactory.core.permissions.PermissionsChecker;
 import com.tripasfactory.core.permissions.PermissionsHandler;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
  * Created by revs87 on 30/07/2016.
  */
-public class CCGoogleMapsFragmentActivity extends CCFusedLocationFragmentActivity implements ICCGoogleMapsConfig {
+public class CCGoogleMapsFragmentActivity extends CCFusedLocationFragmentActivity implements ICCGoogleMapsConfig, ICCMarkerConfig {
 
-    private final int WALKING_ZOOM_VALUE = 16;
+    protected static final int WALKING_ZOOM_VALUE = 16;
 
-    private Vibrator mVibrator;
+    protected Vibrator mVibrator;
 
-    private GoogleMap mMap;
+    protected GoogleMap mMap;
 
-    private LatLng lastLocation;
-    private float lastZoom = WALKING_ZOOM_VALUE;
+    protected float lastZoom = WALKING_ZOOM_VALUE;
+    protected LatLng userPositionMap;
 
-    private LatLng currentPositionMap;
-    private Marker currentPositionMarker;
-    private LatLng avatarPositionMap;
-    private Marker avatarPositionMarker;
-    private LatLng destinationPositionMap;
-    private Marker destinationPositionMarker;
+    protected LatLng fusedPositionMap;
+    protected Marker fusedPositionMarker;
+    protected LatLng destinationPositionMap;
+    protected Marker destinationPositionMarker;
 
-    private LayoutInflater inflater;
-    private View rootView;
-    private Context activity;
-    private PermissionsChecker permissionsChecker;
+    protected Activity activity;
+    protected CCMarkersAnimator animator;
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (permissionsChecker != null) {
+            permissionsChecker.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -92,34 +97,13 @@ public class CCGoogleMapsFragmentActivity extends CCFusedLocationFragmentActivit
         mMap.setTrafficEnabled(false);
         mMap.setIndoorEnabled(true);
         mMap.setBuildingsEnabled(false);
-        mMap.setOnCameraChangeListener(new GoogleMap.OnCameraChangeListener() {
-            @Override
-            public void onCameraChange(CameraPosition cameraPosition) {
-                currentPositionMap = new LatLng(cameraPosition.target.latitude, cameraPosition.target.longitude);
-                lastZoom = cameraPosition.zoom;
-            }
-        });
-        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
-            @Override
-            public void onMapLongClick(LatLng latLng) {
-                destinationPositionMap = latLng;
-                addDestinationPositionMarker(latLng);
-                goToLocation(latLng);
-
-                // vibrate 25ms
-                mVibrator.vibrate(25);
-            }
-        });
-        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-            @Override
-            public void onMapClick(LatLng latLng) {
-                destinationPositionMap = null;
-                removeDestinationPositionMarker();
-            }
-        });
+        mMap.setOnCameraChangeListener(getOnCameraChangeListener());
+        mMap.setOnMapLongClickListener(getOnMapLongClickListener());
+        mMap.setOnMapClickListener(getOnMapClickListener());
 
         permissionsChecker.checkLocationPermissions();
     }
+
 
     /**
      * Vibrator set
@@ -149,57 +133,55 @@ public class CCGoogleMapsFragmentActivity extends CCFusedLocationFragmentActivit
 
     @Override
     protected void updateFusedCurrentPositionMap() {
-        Log.d("FusedCurrentPositionMap", "lat:" + lat + " lon:" + lon);
-        currentPositionMap = new LatLng(lat, lon);
+        Log.d("FusedCurrentPositionMap", "lat:" + realLat + " lon:" + realLon);
+        fusedPositionMap = new LatLng(realLat, realLon);
 
-        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(currentPositionMap, WALKING_ZOOM_VALUE);
-        mMap.animateCamera(cameraUpdate);
-
-        updateCurrentPositionMarker(currentPositionMap);
+        updateFusedPositionMarker(fusedPositionMap);
     }
 
     /**
      * Move camera to point
      */
-    private void goToLocation(LatLng latLng) {
+    protected void goToLocation(LatLng latLng) {
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, this.lastZoom);
         mMap.animateCamera(cameraUpdate);
     }
 
     private void goToRealLocation() {
         // Create a LatLng object for the current location
-        LatLng latLng = new LatLng(lat, lon);
+        LatLng latLng = new LatLng(realLat, realLon);
 
-        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, WALKING_ZOOM_VALUE);
-        mMap.animateCamera(cameraUpdate);
-
-        updateCurrentPositionMarker(latLng);
+        updateFusedPositionMarker(latLng);
     }
 
     /**
      * Markers
      */
-    private void updateCurrentPositionMarker(LatLng latLng) {
-        if (currentPositionMarker != null) {
-            currentPositionMarker.remove();
+    protected void updateFusedPositionMarker(LatLng latLng) {
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, WALKING_ZOOM_VALUE);
+        mMap.animateCamera(cameraUpdate);
+
+        if (fusedPositionMarker != null) {
+            fusedPositionMarker.remove();
         }
-        MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("You are here!");
-        currentPositionMarker = mMap.addMarker(markerOptions);
-        if (currentPositionMarker != null) {
-            currentPositionMarker.showInfoWindow();
+        MarkerOptions markerOptions = getFusedMarkerOptions(latLng);
+        fusedPositionMarker = mMap.addMarker(markerOptions);
+        if (fusedPositionMarker != null) {
+            fusedPositionMarker.setVisible(isFusedVisibleByDefault());
+            fusedPositionMarker.showInfoWindow();
         }
     }
 
-    private void addDestinationPositionMarker(LatLng latLng) {
+    protected void addDestinationPositionMarker(LatLng latLng) {
         removeDestinationPositionMarker();
-        MarkerOptions markerOptions = new MarkerOptions().position(latLng).title("Destination?");
+        MarkerOptions markerOptions = getDestinationMarkerOptions(latLng);
         destinationPositionMarker = mMap.addMarker(markerOptions);
         if (destinationPositionMarker != null) {
             destinationPositionMarker.showInfoWindow();
         }
     }
 
-    private void removeDestinationPositionMarker() {
+    protected void removeDestinationPositionMarker() {
         if (destinationPositionMarker != null) {
             destinationPositionMarker.remove();
         }
@@ -208,5 +190,101 @@ public class CCGoogleMapsFragmentActivity extends CCFusedLocationFragmentActivit
     @Override
     public int getLayout() {
         return R.layout.fragment_map;
+    }
+
+    @Override
+    public boolean isFusedVisibleByDefault() {
+        return true;
+    }
+
+    @Override
+    public void onCameraChangeImpl() {
+    }
+
+    @Override
+    public GoogleMap.OnCameraChangeListener getOnCameraChangeListener() {
+        return new GoogleMap.OnCameraChangeListener() {
+            @Override
+            public void onCameraChange(CameraPosition cameraPosition) {
+                userPositionMap = new LatLng(cameraPosition.target.latitude, cameraPosition.target.longitude);
+                lastZoom = cameraPosition.zoom;
+                onCameraChangeImpl();
+            }
+        };
+    }
+
+    @Override
+    public GoogleMap.OnMapLongClickListener getOnMapLongClickListener() {
+        return new GoogleMap.OnMapLongClickListener() {
+            @Override
+            public void onMapLongClick(LatLng latLng) {
+                destinationPositionMap = latLng;
+                addDestinationPositionMarker(latLng);
+
+                // vibrate 25ms
+                mVibrator.vibrate(25);
+
+                // Cute animation
+                onAnimationStart();
+            }
+        };
+    }
+
+    @Override
+    public GoogleMap.OnMapClickListener getOnMapClickListener() {
+        return new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                destinationPositionMap = null;
+                removeDestinationPositionMarker();
+                onAnimationStop();
+            }
+        };
+    }
+
+    @Override
+    public void onAnimationStart() {
+        //goToLocation(latLng);
+        List<Marker> markers = new ArrayList<>();
+        markers.add(fusedPositionMarker);
+        markers.add(destinationPositionMarker);
+        animator = new CCMarkersAnimator(mMap, markers, new ICCMarkersAnimatorCallback() {
+            @Override
+            public void onFinished() {
+
+            }
+        });
+        animator.startAnimation();
+    }
+
+    @Override
+    public void onAnimationStop() {
+        if(animator != null){
+            animator.stopAnimation();
+        }
+
+    }
+
+    @Override
+    public MarkerOptions getFusedMarkerOptions(LatLng latLng) {
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(latLng);
+        markerOptions.title("You are here!");
+        return markerOptions;
+    }
+
+    @Override
+    public MarkerOptions getDestinationMarkerOptions(LatLng latLng) {
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(latLng);
+        markerOptions.title("Destination?");
+        return markerOptions;
+    }
+
+    @Override
+    public MarkerOptions getAvatarMarkerOptions(LatLng latLng) {
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(latLng);
+        return markerOptions;
     }
 }

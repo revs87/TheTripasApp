@@ -3,8 +3,12 @@ package com.tripasfactory.core.permissions;
 /**
  * Created by revs8 on 30/07/2016.
  */
-public interface PermissionsHandler {
-    void setVibrator();
+public abstract class PermissionsHandler {
 
-    void setMyLocationButton();
+    public void setVibrator() {
+    }
+
+    public void setMyLocationButton() {
+    }
+
 }
