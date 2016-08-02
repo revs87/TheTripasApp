@@ -7,14 +7,6 @@ repositories {
 }
 
 android {
-    signingConfigs {
-        config {
-            keyAlias 'release'
-            keyPassword 'Tripas!!!'
-            storeFile file('C:/WorkFS/_myHub/key/release.keystore')
-            storePassword 'Tripas!!!'
-        }
-    }
     compileSdkVersion 23
     buildToolsVersion "23.0.3"
     defaultConfig {
@@ -23,7 +15,6 @@ android {
         targetSdkVersion 23
         versionCode 1
         versionName "1.0"
-        signingConfig signingConfigs.config
         multiDexEnabled true
     }
     buildTypes {

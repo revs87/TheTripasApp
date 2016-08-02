@@ -1,14 +1,6 @@
 apply plugin: 'com.android.library'
 
 android {
-    signingConfigs {
-        config {
-            keyAlias 'release'
-            keyPassword 'Tripas!!!'
-            storeFile file('C:/WorkFS/_myHub/key/release.keystore')
-            storePassword 'Tripas!!!'
-        }
-    }
     compileSdkVersion 24
     buildToolsVersion "24.0.1"
     defaultConfig {

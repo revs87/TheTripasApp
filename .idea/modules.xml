@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/TripasApp.iml" filepath="$PROJECT_DIR$/TripasApp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/TheTripasApp.iml" filepath="$PROJECT_DIR$/TheTripasApp.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/clientcore/clientcore.iml" filepath="$PROJECT_DIR$/clientcore/clientcore.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core/core.iml" filepath="$PROJECT_DIR$/core/core.iml" />
     </modules>
   </component>
 </project>
