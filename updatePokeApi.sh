@@ -1,13 +1,14 @@
-#!/usr/bin/env bash
+#!/bin/bash 
 
-CURR_PROJ_PWD_VAR='/Users/rui.vieira/repo/_github/PokeGOAPI-Java'
-DEST_JAR_PWD_VAR='/Users/rui.vieira/repo/_github/TheTripasApp/app/libs/'
+cd ..
+current_dir=$(pwd)
+current_api='PokeGOAPI-Java'
+current_proj='TheTripasApp/app/libs/'
 
-
-cd $CURR_PROJ_PWD_VAR
+cd $current_api
 ./gradlew clean
 git pull
 git submodule --init
 ./gradlew build
 cd ..
-cp $CURR_PROJ_PWD_VAR/build/libs/PokeGOAPI-Java-0.0.1-SNAPSHOT.jar $DEST_JAR_PWD_VAR
+cp $current_api/build/libs/PokeGOAPI-Java-0.0.1-SNAPSHOT.jar $current_proj
